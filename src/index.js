@@ -4,6 +4,42 @@ import PropTypes from "prop-types";
 
 const node = document.getElementById("root");
 
+const data = {
+  post: {
+    id: 123,
+    content:
+      "What we hope ever to do with ease, we must first learn to do with diligence. - Samuel Johnson",
+    user: "Mark Thomas",
+  },
+  comments: [
+    {
+      id: 0,
+      user: "David",
+      content: "such.win.",
+    },
+    {
+      id: 1,
+      user: "Haley",
+      content: "Love it.",
+    },
+    {
+      id: 2,
+      user: "Peter",
+      content: "Who was Samuel Johnson?",
+    },
+    {
+      id: 3,
+      user: "Mitchell",
+      content: "@Peter get off Letters and do your homework",
+    },
+    {
+      id: 4,
+      user: "Peter",
+      content: "@mitchell ok :P",
+    },
+  ],
+};
+
 class Post extends Component {
   render() {
     return React.createElement(
@@ -79,22 +115,24 @@ class CreateComment extends Component {
     this.handleSubmint = this.handleSubmint.bind(this);
   }
   handleUserChange(event) {
-    const val = event.target.value;
     this.setState(() => ({
-      user: val,
+      user: event.target.value,
     }));
   }
   handleTextChange(event) {
-    const val = event.target.value;
     this.setState(() => ({
-      content: val,
+      content: event.target.value,
     }));
   }
   handleSubmint(event) {
     event.preventDefault();
+    this.props.onCommentSubmint({
+      user: this.state.user.trim(),
+      content: this.state.content.trim(),
+    });
     this.setState(() => ({
       user: "",
-      content: "",
+      text: "",
     }));
   }
 
@@ -126,22 +164,62 @@ class CreateComment extends Component {
 }
 
 CreateComment.propTypes = {
+  onCommentSubmint: PropTypes.func.isRequired,
   content: PropTypes.string,
 };
 
-const App = React.createElement(
-  Post,
-  {
-    id: 1,
-    content: " said: This  is a post!",
-    user: "mark",
-  },
-  React.createElement(Comment, {
-    id: 2,
-    user: "bob",
-    content: " commented: wow! how cool!",
-  }),
-  React.createElement(CreateComment)
-);
+class CommentBox extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      comments: this.props.comments,
+    };
+    this.handleCommentSubmint = this.handleCommentSubmint.bind(this);
+  }
+  handleCommentSubmint(comment) {
+    const comments = this.state.comments;
+    comment.id = Date.now();
+    const newComments = comments.concat([comment]);
+    this.sesState({
+      comments: newComments,
+    });
+  }
 
-render(App, node);
+  render() {
+    return React.createElement(
+      "div",
+      {
+        className: "commentBox",
+      },
+      React.createElement(Post, {
+        id: this.props.post.id,
+        content: this.props.post.content,
+        user: this.props.post.user,
+      }),
+      this.state.comments.map(function (comment) {
+        return React.createElement(Comment, {
+          key: comment.id,
+          id: comment.id,
+          content: comment.content,
+          user: comment.user,
+        });
+      }),
+      React.createElement(CreateComment, {
+        onCommentSubmint: this.handleCommentSubmint,
+      })
+    );
+  }
+}
+
+CommentBox.propTypes = {
+  post: PropTypes.object,
+  comments: PropTypes.arrayOf(PropTypes.object),
+};
+
+render(
+  React.createElement(CommentBox, {
+    comments: data.comments,
+    post: data.post,
+  }),
+  node
+);
